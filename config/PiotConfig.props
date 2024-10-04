@@ -44,12 +44,13 @@ enableMqttClient = True
 enableCoapServer = False
 enableCoapClient = False
 enableSystemPerformance = True
-enableSensing    = False
+enableSensing    = True
 enableLogging    = True
 pollCycleSecs    = 5
 testGdaDataPath  = /tmp/gda-data
 testCdaDataPath  = /tmp/cda-data
 testEmptyApp     = False
+enableSimulator = True
 
 # configurable limits for sensor simulation
 humiditySimFloor   =   35.0
