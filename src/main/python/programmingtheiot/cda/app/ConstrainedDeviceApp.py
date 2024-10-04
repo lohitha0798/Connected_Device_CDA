@@ -33,6 +33,7 @@ class ConstrainedDeviceApp():
 		@param path The name of the resource to apply to the URI.
 		"""
 		logging.info("Initializing CDA...")
+		self.sysPerfMgr = SystemPerformanceManager()
 		self.dataMgr = DeviceDataManager()
 		# TODO: implementation here
 
@@ -42,15 +43,11 @@ class ConstrainedDeviceApp():
 		
 		"""
 		logging.info("Starting CDA...")
-		
+		self.sysPerfMgr.startManager()
 		self.dataMgr.startManager()
-		
-		logging.info("CDA started.")
-
-		
 		# TODO: implementation here
 		
-	
+		logging.info("CDA started.")
 
 	def stopApp(self, code: int):
 		"""
@@ -58,13 +55,11 @@ class ConstrainedDeviceApp():
 		
 		"""
 		logging.info("CDA stopping...")
-		
+		self.sysPerfMgr.stopManager()
 		self.dataMgr.stopManager()
-		
-		logging.info("CDA stopped with exit code %s.", str(code))
-		
 		# TODO: implementation here
 		
+		logging.info("CDA stopped with exit code %s.", str(code))
 		
 	def parseArgs(self, args):
 		"""
@@ -96,7 +91,6 @@ def main():
 		cda.stopApp(0)
 
 if __name__ == '__main__':
-	
 	"""
 	Attribute definition for when invoking as app via command line
 	
