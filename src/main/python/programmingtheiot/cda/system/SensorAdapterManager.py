@@ -1,4 +1,5 @@
 import logging
+from importlib import import_module
 from apscheduler.schedulers.background import BackgroundScheduler
 import programmingtheiot.common.ConfigConst as ConfigConst
 from programmingtheiot.common.ConfigUtil import ConfigUtil
@@ -56,61 +57,56 @@ class SensorAdapterManager(object):
         self._initEnvironmentalSensorTasks()
 
     def _initEnvironmentalSensorTasks(self):
-        humidityFloor = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.HUMIDITY_SIM_FLOOR_KEY, 
-            defaultVal=SensorDataGenerator.LOW_NORMAL_ENV_HUMIDITY
-        )
-        humidityCeiling = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.HUMIDITY_SIM_CEILING_KEY, 
-            defaultVal=SensorDataGenerator.HI_NORMAL_ENV_HUMIDITY
-        )
+        humidityFloor   = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.HUMIDITY_SIM_FLOOR_KEY, defaultVal = SensorDataGenerator.LOW_NORMAL_ENV_HUMIDITY)
+        humidityCeiling = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.HUMIDITY_SIM_CEILING_KEY, defaultVal = SensorDataGenerator.HI_NORMAL_ENV_HUMIDITY)
         
-        pressureFloor = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.PRESSURE_SIM_FLOOR_KEY, 
-            defaultVal=SensorDataGenerator.LOW_NORMAL_ENV_PRESSURE
-        )
-        pressureCeiling = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.PRESSURE_SIM_CEILING_KEY, 
-            defaultVal=SensorDataGenerator.HI_NORMAL_ENV_PRESSURE
-        )
+        pressureFloor   = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.PRESSURE_SIM_FLOOR_KEY, defaultVal = SensorDataGenerator.LOW_NORMAL_ENV_PRESSURE)
+        pressureCeiling = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.PRESSURE_SIM_CEILING_KEY, defaultVal = SensorDataGenerator.LOW_NORMAL_ENV_PRESSURE)
         
-        tempFloor = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.TEMP_SIM_FLOOR_KEY, 
-            defaultVal=SensorDataGenerator.LOW_NORMAL_INDOOR_TEMP
-        )
-        tempCeiling = self.configUtil.getFloat(
-            section=ConfigConst.CONSTRAINED_DEVICE, 
-            key=ConfigConst.TEMP_SIM_CEILING_KEY, 
-            defaultVal=SensorDataGenerator.HI_NORMAL_INDOOR_TEMP
-        )
+        tempFloor       = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.TEMP_SIM_FLOOR_KEY, defaultVal = SensorDataGenerator.LOW_NORMAL_INDOOR_TEMP)
+        tempCeiling     = \
+            self.configUtil.getFloat( \
+                section = ConfigConst.CONSTRAINED_DEVICE, key = ConfigConst.TEMP_SIM_CEILING_KEY, defaultVal = SensorDataGenerator.HI_NORMAL_INDOOR_TEMP)
         
         if not self.useEmulator:
             self.dataGenerator = SensorDataGenerator()
             
-            humidityData = self.dataGenerator.generateDailyEnvironmentHumidityDataSet(
-                minValue=humidityFloor, 
-                maxValue=humidityCeiling, 
-                useSeconds=False
-            )
-            pressureData = self.dataGenerator.generateDailyEnvironmentPressureDataSet(
-                minValue=pressureFloor, 
-                maxValue=pressureCeiling, 
-                useSeconds=False
-            )
-            tempData = self.dataGenerator.generateDailyIndoorTemperatureDataSet(
-                minValue=tempFloor, 
-                maxValue=tempCeiling, 
-                useSeconds=False
-            )
+            humidityData = \
+                self.dataGenerator.generateDailyEnvironmentHumidityDataSet( \
+                    minValue = humidityFloor, maxValue = humidityCeiling, useSeconds = False)
+            pressureData = \
+                self.dataGenerator.generateDailyEnvironmentPressureDataSet( \
+                    minValue = pressureFloor, maxValue = pressureCeiling, useSeconds = False)
+            tempData     = \
+                self.dataGenerator.generateDailyIndoorTemperatureDataSet( \
+                    minValue = tempFloor, maxValue = tempCeiling, useSeconds = False)
             
-            self.humidityAdapter = HumiditySensorSimTask(dataSet=humidityData)
-            self.pressureAdapter = PressureSensorSimTask(dataSet=pressureData)
-            self.tempAdapter = TemperatureSensorSimTask(dataSet=tempData)
+            self.humidityAdapter = HumiditySensorSimTask(dataSet = humidityData)
+            self.pressureAdapter = PressureSensorSimTask(dataSet = pressureData)
+            self.tempAdapter     = TemperatureSensorSimTask(dataSet = tempData)
+    
+        else:
+            heModule = import_module('programmingtheiot.cda.emulated.HumiditySensorEmulatorTask', 'HumiditySensorEmulatorTask')
+            heClazz = getattr(heModule, 'HumiditySensorEmulatorTask')
+            self.humidityAdapter = heClazz()
+            
+            peModule = import_module('programmingtheiot.cda.emulated.PressureSensorEmulatorTask', 'PressureSensorEmulatorTask')
+            peClazz = getattr(peModule, 'PressureSensorEmulatorTask')
+            self.pressureAdapter = peClazz()
+            
+            teModule = import_module('programmingtheiot.cda.emulated.TemperatureSensorEmulatorTask', 'TemperatureSensorEmulatorTask')
+            teClazz = getattr(teModule, 'TemperatureSensorEmulatorTask')
+            self.tempAdapter = teClazz()
 
     def handleTelemetry(self):
         humidityData = self.humidityAdapter.generateTelemetry()
@@ -121,9 +117,9 @@ class SensorAdapterManager(object):
         pressureData.setLocationID(self.locationID)
         tempData.setLocationID(self.locationID)
         
-        logging.debug('Generated humidity data: ' + str(humidityData))
-        logging.debug('Generated pressure data: ' + str(pressureData))
-        logging.debug('Generated temp data: ' + str(tempData))
+        logging.debug('Generated humidity data: ' + str(humidityData.value))
+        logging.debug('Generated pressure data: ' + str(pressureData.value))
+        logging.debug('Generated temp data: ' + str(tempData.value))
         
         if self.dataMsgListener:
             self.dataMsgListener.handleSensorMessage(humidityData)
